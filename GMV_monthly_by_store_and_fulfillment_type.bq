@@ -3,6 +3,9 @@
 -- Last Update: 10/10/2023
 -- Notes: n.a.
 
+
+create or replace table wmt-everest.mfc_data.monthly_gmv_by_store_and_fulfillment_type as 
+
 with order_level_data as (
 select
   order_nbr
