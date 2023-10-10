@@ -1,0 +1,50 @@
+-- Purpose: Monthly GMV by Fulfillment Type
+-- Author/Source: Weifang Li
+-- Last Update: 10/10/2023
+-- Notes: n.a.
+
+with table_prep as (
+select
+  order_nbr
+  , fulfmt_order_nbr
+  , svc_fulfmt_type_desc
+  , ORDER_PLCD_DT
+  , svc_nm
+  , case
+      when upper(svc_nm) IN ('SI', 'OG') and svc_fulfmt_type_desc in ('SCHEDULED_DELIVERY') then "OG_regular_delivery"
+      when upper(svc_nm) IN ('SI', 'OG') and svc_fulfmt_type_desc in ('EXPRESS_DELIVERY') then "OG_express_delivery"
+      when upper(svc_nm) IN ('SI', 'OG') and svc_fulfmt_type_desc in ('SCHEDULED_PICKUP') then "OG_regular_pickup"
+      when upper(svc_nm) IN ('SI', 'OG') and svc_fulfmt_type_desc in ('EXPRESS_PICKUP') then "OG_express_pickup"
+      when upper(svc_nm) IN ('SI', 'OG') and svc_fulfmt_type_desc in ('IN_HOME_DELIVERY','INHOME') then "InHome_delivery"
+      when upper(svc_nm) in ('SFS','SI') and svc_fulfmt_type_desc in ('UNSCHEDULED_DELIVERY') and ozark_ind =1 THEN 'DFS'
+      when upper(svc_nm) in ('SFS','SI') and svc_fulfmt_type_desc in ('UNSCHEDULED_DELIVERY') and ozark_ind =0 THEN 'SFS'
+      else "Other" end fulfmt_type
+  , EXTRACT(YEAR FROM ORDER_PLCD_DT) year_id
+  , EXTRACT(MONTH FROM ORDER_PLCD_DT) month_id
+  , sum(net_cncl_qty) units
+  , sum(gmv_order_amt) GMV
+from wmt-edw-prod.WW_CREW_DL_RPT_VM.CNSLD_ORDER_ITEM
+where 1=1
+  and ORDER_PLCD_DT between '2023-02-01' and '2023-05-31'  -- change date period of your interest
+  and op_cmpny_cd = 'WMT.COM'
+  and fulfmt_status_desc = 'SHIPPED'
+  and net_cncl_qty > 0
+  and gmv_cr_ind = 1
+  and gmv_ind = 1
+  and UPPER(RPT_LVL_0_NM) <> 'WALMART SERVICES'
+  and UPPER(PROD_NM) NOT LIKE '%GIFT CARD%'
+  and dstrbtr_grp_type_nm IN ('STORE')
+group by 1,2,3,4,5,6,7
+)
+
+select 
+  year_id
+  , month_id
+  , count(distinct order_nbr) orders
+  , count(distinct fulfmt_order_nbr) fulfmt_orders
+  , sum(units) units
+  , sum(GMV) GMV 
+from table_prep
+where fulfmt_type != 'Other'
+group by 1,2
+order by 1,2
