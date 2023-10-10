@@ -1,0 +1,17 @@
+-- Purpose: Unscheduled Orders Demand Forecasts
+-- Author/Source: Weifang Li
+-- Last Update: 10/10/2023
+-- Notes: n.a.
+
+select 
+  site_id
+  , fulfmt_type
+  , month_id
+  , year_id
+  , sum(demand_orders ) / 31 daily_avg_demand
+from `wmt-everest.AUM.lmd_hist_pixel_source_demand` 
+where 1=1 
+  and fulfmt_type in ('FC_sort', 'DFS', 'SFS')
+  and year_id = 2023 
+  and month_id in (8)
+group by 1,2,3,4
