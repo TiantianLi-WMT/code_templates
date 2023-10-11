@@ -45,6 +45,7 @@ select
   year_id
   , month_id
   , site_id
+  , fulfmt_type
   , count(distinct order_nbr) orders
   , count(distinct fulfmt_order_nbr) fulfmt_orders
   , sum(units) units
