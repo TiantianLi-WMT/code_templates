@@ -29,7 +29,7 @@ select
   , sum(gmv_order_amt) GMV
 from wmt-edw-prod.WW_CREW_DL_RPT_VM.CNSLD_ORDER_ITEM
 where 1=1
-  and ORDER_PLCD_DT between '2023-07-01' and '2023-09-30'  -- change date period of your interest
+  and ORDER_PLCD_DT between '2023-02-01' and '2023-09-30'  -- change date period of your interest
   and op_cmpny_cd = 'WMT.COM'
   and fulfmt_status_desc = 'SHIPPED'
   and net_cncl_qty > 0
@@ -52,5 +52,5 @@ select
   , sum(GMV) GMV 
 from order_level_data
 where fulfmt_type != 'Other'
-group by 1,2,3
-order by 1,2,3
+group by 1,2,3,4
+order by 1,2,3,4
