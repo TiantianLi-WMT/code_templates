@@ -1,0 +1,21 @@
+select
+  -- STORE_NUM
+  date_trunc(RPT_DT, month) Month
+  , case 
+      when STORE_NUM in (1381, 3833, 3861, 4451, 5186, 5349) then 'Mesa, AZ'
+      when STORE_NUM in (6300, 5311, 2463, 5866, 5707, 3777) then 'Frisco, TX'
+      else null end Markets
+  , count(distinct case when FULFMT_TYPE_DESC in ('SCHEDULED_DELIVERY','SCHEDULED_PICKUP','INHOME') and SPARK_SHOPPER_IND is null then SALES_ORDER_NUM else null end) Scheduled_Orders_Nonexpress_Nonspark -- picking this one for "Scheduled" in this analysis 
+  , count(distinct case when FULFMT_TYPE_DESC in ('SCHEDULED_DELIVERY','SCHEDULED_PICKUP','INHOME') and SPARK_SHOPPER_IND = 1 then SALES_ORDER_NUM else null end) Scheduled_Orders_Nonexpress_Spark
+  , count(distinct case when FULFMT_TYPE_DESC in ('EXPRESS_DELIVERY','EXPRESS_PICKUP') then SALES_ORDER_NUM else null end) Scheduled_Orders_Express
+  , count(distinct case when FULFMT_TYPE_DESC in ('UNSCHEDULED_DELIVERY','UNSCHEDULED_PICKUP') then SALES_ORDER_NUM else null end) Unscheduled_Orders -- picking this one for "Unscheduled" in this analysis 
+  , count(distinct case when FULFMT_TYPE_DESC in ('DELIVERY','PICKUP') then SALES_ORDER_NUM else null end) Other_Opd
+  , count(distinct SALES_ORDER_NUM) Total_Digital_Orders -- number may not match sum of previous columns due to rounding
+from `wmt-edw-prod.WW_MB_DL_VM.STORE_FULFMT_ORDER_ITEM_360` a
+where 1=1
+  and ORDER_STATUS_DESC = 'SHIPPED' -- completed orders only
+  and RPT_DT between '2023-01-01' and current_date()
+  and STORE_NUM in (1381, 3833, 3861, 4451, 5186, 5349, -- Mesa, AZ
+                    6300, 5311, 2463, 5866, 5707, 3777)  -- Frisco, TX
+group by 1,2
+order by 1,2 asc
